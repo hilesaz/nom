@@ -407,30 +407,19 @@ where
   move |i: I| {
     let mut res = crate::lib::std::vec::Vec::with_capacity(m);
     let mut input = i.clone();
-    let mut count: usize = 0;
 
-    loop {
+    for count in 0..n {
       let _i = input.clone();
       match f(_i) {
         Ok((i, o)) => {
-          // do not allow parsers that do not consume input (causes infinite loops)
-          if i == input {
-            return Err(Err::Error(E::from_error_kind(input, ErrorKind::ManyMN)));
-          }
-
           res.push(o);
           input = i;
-          count += 1;
-
-          if count == n {
-            return Ok((input, res));
-          }
         }
         Err(Err::Error(e)) => {
           if count < m {
             return Err(Err::Error(E::append(input, ErrorKind::ManyMN, e)));
           } else {
-            return Ok((input, res));
+            break;
           }
         }
         Err(e) => {
@@ -438,6 +427,8 @@ where
         }
       }
     }
+
+    Ok((input, res))
   }
 }
 
@@ -843,11 +834,6 @@ where
       let _input = input.clone();
       match f(_input) {
         Ok((i, o)) => {
-          // do not allow parsers that do not consume input (causes infinite loops)
-          if i == input {
-            return Err(Err::Error(E::from_error_kind(i, ErrorKind::ManyMN)));
-          }
-
           acc = g(acc, o);
           input = i;
         }
